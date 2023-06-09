@@ -1,0 +1,223 @@
+xa = Finalsequence.degrees;
+Tb = Finalsequence.t-3.36;
+
+for i = 600:1800
+    if xa(i) > 120 || xa(i) < 10
+        xa(i) = xa(i-1);
+    end
+end
+
+x1a = fillmissing(xa,'movmedian',5000);
+order = 3;
+cutoffFreq = 0.1;
+[b, a] = butter(order, cutoffFreq);
+X1a = filter(b,a,x1a);
+
+% Resize arrays
+arrayA = datagptcontroller49.Value3; % Array to be adjusted
+arrayC = datagptcontroller49.Value4;
+arrayD = datagptcontroller49.Times;
+arrayE = datagptcontroller49.Value1;
+arrayB = Finalsequence.degrees; % Target array
+
+% Determine the ratio between the sizes of the arrays
+ratio1 = numel(arrayB) / numel(arrayA);
+ratio2 = numel(arrayB) / numel(arrayC);
+ratio3 = numel(arrayB) / numel(arrayD);
+ratio4 = numel(arrayB) / numel(arrayE);
+
+% Initialize the adjusted array
+adjustedArrayA = zeros(size(arrayB));
+adjustedArrayC = zeros(size(arrayB));
+adjustedArrayD = zeros(size(arrayB));
+adjustedArrayE = zeros(size(arrayB));
+
+% Loop through the elements of the adjusted array and assign corresponding values from arrayA
+for i = 1:numel(adjustedArrayA)
+    % Calculate the index in arrayA
+    index = round(i / ratio1);
+    
+    % Assign the value from arrayA to the adjusted array
+    adjustedArrayA(i) = arrayA(index);
+end
+
+for i = 1:numel(adjustedArrayC)
+    % Calculate the index in arrayC
+    index = round(i / ratio2);
+    
+    % Assign the value from arrayC to the adjusted array
+    adjustedArrayC(i) = arrayC(index);
+end
+
+for i = 1:numel(adjustedArrayD)
+    % Calculate the index in arrayC
+    index = round(i / ratio3);
+    
+    % Assign the value from arrayC to the adjusted array
+    adjustedArrayD(i) = arrayD(index);
+end
+
+for i = 1:numel(adjustedArrayE)
+    % Calculate the index in arrayC
+    index = round(i / ratio4);
+    
+    % Assign the value from arrayC to the adjusted array
+    adjustedArrayE(i) = arrayE(index);
+end
+
+% Display the adjusted arrays
+disp('Adjusted Array A:');
+disp(adjustedArrayA);
+disp('Adjusted Array C:');
+disp(adjustedArrayC);
+disp('Adjusted Array D:');
+disp(adjustedArrayD);
+disp('Adjusted Array E:');
+disp(adjustedArrayE);
+disp('Array B:');
+disp(arrayB);
+
+x1 = adjustedArrayA;
+windowSize = 10; 
+b = (1/windowSize)*ones(1,windowSize);
+a = 1; 
+z1 = filter(b,a,x1);
+
+x2 = adjustedArrayE;
+windowSize = 10; 
+b = (1/windowSize)*ones(1,windowSize);
+a = 1;
+z2 = filter(b,a,x2);
+t = adjustedArrayD;
+
+Ia = adjustedArrayC;
+
+figure
+subplot(2,2,1)
+set(gcf,'color','k')
+
+subplot 221;
+T1 = [min(t) max(t)];
+Z1 = [min(z1) max(z1)];
+patch([T1 fliplr(T1)], [Z1(1) Z1(1) Z1(2) Z1(2)], [0 0 0], 'EdgeColor', 'none', 'FaceAlpha', 1);
+hold on
+plot(t, z1, 'w');
+g1 = animatedline;
+hold off
+axis([min(t) max(t) min(z1) max(z1)]);
+xlabel('time', 'color', 'w');
+ylabel('angle', 'color', 'w');
+ax = gca;
+ax.LineWidth = 5;
+set(gca, 'XColor', 'w', 'YColor', 'w');
+
+subplot 222;
+T2 = [min(t) max(t)];
+Z2 = [min(z2) max(z2)];
+patch([T2 fliplr(T2)], [Z2(1) Z2(1) Z2(2) Z2(2)], [0 0 0], 'EdgeColor', 'none', 'FaceAlpha', 1);
+hold on
+plot(t, z2, 'w');
+g2 = animatedline;
+hold off
+axis([min(t) max(t) min(z2) max(z2)]);
+xlabel('time', 'color', 'w');
+ylabel('pressure', 'color', 'w');
+ax = gca;
+ax.LineWidth = 5;
+set(gca, 'XColor', 'w', 'YColor', 'w');
+
+subplot 223;
+T3 = [min(Tb) max(Tb)];
+Z3 = [min(X1a) max(X1a)];
+patch([T3 fliplr(T3)], [Z3(1) Z3(1) Z3(2) Z3(2)], [0 0 0], 'EdgeColor', 'none', 'FaceAlpha', 1);
+hold on
+plot(Tb, X1a, 'w');
+g3a = animatedline;
+g3b = animatedline;
+hold off
+axis([min(Tb) max(Tb) min(X1a) max(X1a)]);
+xlabel('time', 'color', 'w');
+ylabel('Setpoint', 'color', 'w');
+ax = gca;
+ax.LineWidth = 5;
+set(gca, 'XColor', 'w', 'YColor', 'w');
+
+p = polyfit(x1,X1a,1);
+
+% Extract the coefficients
+slope = p(1); % Slope (regression coefficient)
+intercept = p(2); % Y-intercept
+
+% Display the coefficients
+disp('Slope (Regression Coefficient):');
+disp(slope);
+disp('Y-Intercept:');
+disp(intercept);
+
+q = polyval(p,x1);
+r = x1*slope+intercept;
+
+subplot 224;
+T4 = [min(t) max(t)];
+Z4 = [min(r) max(r)];
+patch([T4 fliplr(T4)], [Z4(1) Z4(1) Z4(2) Z4(2)], [0 0 0], 'EdgeColor', 'none', 'FaceAlpha', 1);
+hold on
+plot(t, r, 'w');
+g4a = animatedline;
+g4b = animatedline;
+hold off
+axis([min(t) max(t) min(r) max(r)]);
+xlabel('time', 'color', 'w');
+ylabel('Linearisation', 'color', 'w');
+ax = gca;
+ax.LineWidth = 5;
+set(gca, 'XColor', 'w', 'YColor', 'w');
+
+video = VideoWriter('Plot_bending35.avi','uncompressed AVI');
+open(video)
+
+for k = 1:10:length(z1)
+   pause(0.001)
+   subplot 221;
+   if isvalid(g1)
+       addpoints(g1,t(k),z1(k))
+       set(g1,'color','green','linewidth',2)
+       drawnow 
+   else
+        break
+   end
+   subplot 222;
+   if isvalid(g2)
+       addpoints(g2,t(k),z2(k))
+       set(g2,'color','green','linewidth',2)
+       drawnow 
+   else
+        break
+   end
+   subplot 223;
+   if isvalid(g3a) && isvalid(g3b)
+       addpoints(g3a,Tb(k),X1a(k))
+       set(g3a,'color','green','linewidth',2)
+       drawnow
+       addpoints(g3b,t(k),Ia(k))
+       set(g3b,'color','blue','linewidth',2)
+       drawnow
+   else
+        break
+   end
+   subplot 224;
+   if isvalid(g4a) && isvalid(g4b)
+       addpoints(g4b,Tb(k),X1a(k))
+       set(g4b,'color','green','linewidth',2)
+       drawnow
+       addpoints(g4a,t(k),r(k))
+       set(g4a,'color','red','linewidth',2)
+       drawnow
+   else
+        break
+   end
+   F = getframe(gcf);
+   writeVideo(video, F);
+end
+
+close(video)
